@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.uv-cache/
+
+# Node
+node_modules/
+.next/
+.pnpm store/
+
+# Environment 
+.env
+.env.local
+.env*.local
+
+# IDE
+.vscode/
+.idea/
+*.DS_Store
+
+# Qdrant local data
+qdrant_storage/
+
