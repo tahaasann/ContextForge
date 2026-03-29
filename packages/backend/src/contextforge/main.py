@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
     # Şimdilik sadece log basıyoruz.
     print(f"🚀 ContextForge starting — env: {settings.app_env}")
 
-    qdrant = AsyncQdrantClient(":memory:")
+    qdrant = AsyncQdrantClient(url=settings.qdrant_url)
     app.state.qdrant = qdrant
 
     yield
