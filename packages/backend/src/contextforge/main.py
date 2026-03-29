@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from qdrant_client import AsyncQdrantClient
 
 from contextforge.api.ingest import router as ingest_router
+from contextforge.api.query import router as query_router
 from contextforge.core.config import settings
 
 
@@ -50,6 +51,7 @@ app.add_middleware(
 
 
 app.include_router(ingest_router)
+app.include_router(query_router)
 
 
 @app.get("/health")
