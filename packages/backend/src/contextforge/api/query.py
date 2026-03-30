@@ -15,16 +15,19 @@ class QueryRequest(BaseModel):
 @router.post("/ask")
 async def ask(request: Request, body: QueryRequest):
     client = request.app.state.qdrant
+    openai_client = request.app.state.openai
 
     chunks = await retrieve(
         query=body.question,
         client=client,
+        openai_client=openai_client,
         top_k=body.top_k,
     )
 
     result = await generate_answer(
         query=body.question,
         chunks=chunks,
+        openai_client=openai_client,
     )
 
     return result
