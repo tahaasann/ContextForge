@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
-from contextforge.rag.generator import generate_answer
-from contextforge.rag.retriever import retrieve
+from contextforge.rag.graph import rag_graph
 
 router = APIRouter(prefix="/query", tags=["query"])
 
@@ -14,20 +13,25 @@ class QueryRequest(BaseModel):
 
 @router.post("/ask")
 async def ask(request: Request, body: QueryRequest):
-    client = request.app.state.qdrant
-    openai_client = request.app.state.openai
+    # Client'ları config üzerinden graph'a geçiriyoruz.
+    # Bu LangGraph'ın "dependency injection" yöntemi.
+    config = {
+        "configurable": {
+            "qdrant": request.app.state.qdrant,
+            "openai": request.app.state.openai,
+        }
+    }
 
-    chunks = await retrieve(
-        query=body.question,
-        client=client,
-        openai_client=openai_client,
-        top_k=body.top_k,
+    # Graph'ı başlangıç state'iyle çalıştır.
+    # Diğer key'ler node'lar tarafından doldurulacak.
+    result = await rag_graph.ainvoke(
+        {"question": body.question},
+        config=config,
     )
 
-    result = await generate_answer(
-        query=body.question,
-        chunks=chunks,
-        openai_client=openai_client,
-    )
-
-    return result
+    return {
+        "answer": result["answer"],
+        "sources": result["sources"],
+        "eval_score": result["eval_score"],
+        "eval_reasoning": result["eval_reasoning"],
+    }
