@@ -1,5 +1,3 @@
-from typing import Annotated
-from langgraph.graph.message import add_messages
 from typing_extensions import TypedDict
 
 from contextforge.rag.retriever import RetrievedChunk
@@ -10,7 +8,8 @@ from qdrant_client import AsyncQdrantClient
 from contextforge.rag.generator import generate_answer
 from contextforge.rag.retriever import retrieve
 
-from langgraph.graph import END, StateGraph
+from langgraph.graph import END, START, StateGraph
+from langgraph.types import RunnableConfig
 
 
 class AgentState(TypedDict):
@@ -34,7 +33,7 @@ class AgentState(TypedDict):
     eval_reasoning: str
 
 
-async def rag_node(state: AgentState, config: dict) -> dict:
+async def rag_node(state: AgentState, config: RunnableConfig) -> dict:
     # config["configurable"] içinde runtime'da geçilen
     # Qdrant ve OpenAI client'ları var.
     # Her node bu pattern'ı kullanarak dış bağımlılıklara erişir.
@@ -65,7 +64,7 @@ async def rag_node(state: AgentState, config: dict) -> dict:
     }
 
 
-async def eval_node(state: AgentState, config: dict) -> dict:
+async def eval_node(state: AgentState, config: RunnableConfig) -> dict:
     configurable = config.get("configurable", {})
     openai: AsyncOpenAI = configurable["openai"]
 
@@ -111,10 +110,11 @@ def build_rag_graph():
     graph.add_node("eval", eval_node)
 
     # Yol: RAG biter → Eval başlar → Biter
+    graph.add_edge(START, "rag")
     graph.add_edge("rag", "eval")
     graph.add_edge("eval", END)
 
-    graph.set_entry_point("rag")
+    
 
     return graph.compile()
 
