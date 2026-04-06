@@ -7,6 +7,8 @@ from openai import AsyncOpenAI
 from qdrant_client import AsyncQdrantClient
 
 from contextforge.core.config import settings
+from contextforge.api.eval import router as eval_router
+
 
 
 class AppState(TypedDict):
@@ -50,6 +52,7 @@ from contextforge.api.query import router as query_router
 
 app.include_router(ingest_router)
 app.include_router(query_router)
+app.include_router(eval_router)
 
 
 @app.get("/health")
