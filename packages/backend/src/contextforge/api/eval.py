@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
+from contextforge.core.observability import get_langfuse
 from contextforge.evaluation.pipeline import run_evaluation
 
 router = APIRouter(prefix="/eval", tags=["evaluation"])
@@ -24,6 +25,22 @@ async def run_eval(request: Request, body: EvalRequest):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+    # RAGAS metriklerini Langfuse'a gönder
+    # Dashboard'da "Scores" sekmesinde görünecek
+    langfuse = get_langfuse()
+    langfuse.score(
+        name="ragas_faithfulness",
+        value=result.faithfulness,
+    )
+    langfuse.score(
+        name="ragas_answer_relevancy",
+        value=result.answer_relevancy,
+    )
+    langfuse.score(
+        name="ragas_context_precision",
+        value=result.context_precision,
+    )
+    
     return {
         "metrics": {
             "faithfulness": round(result.faithfulness, 3),
